@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XI TKJ 1 — Struktur Kelas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0a1a2e;
+    --navy-panel:#0f2540;
+    --navy-line:#1c3a5e;
+    --cyan:#5fd8e8;
+    --cyan-dim:#5fd8e850;
+    --amber:#f2a93b;
+    --paper:#eaf2fa;
+    --slate:#7d95b3;
+    --green-ok:#6fd39a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--navy-deep);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    background-image:
+      linear-gradient(var(--navy-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--navy-line) 1px, transparent 1px);
+    background-size:40px 40px;
+    background-attachment:fixed;
+    overflow-x:hidden;
+  }
+  .mono{font-family:'Space Mono',monospace;}
+  ::selection{background:var(--cyan); color:var(--navy-deep);}
+
+  .bracket{position:fixed; width:22px; height:22px; border-color:var(--cyan-dim); z-index:50; pointer-events:none;}
+  .bracket.tl{top:14px; left:14px; border-top:2px solid; border-left:2px solid;}
+  .bracket.tr{top:14px; right:14px; border-top:2px solid; border-right:2px solid;}
+  .bracket.bl{bottom:14px; left:14px; border-bottom:2px solid; border-left:2px solid;}
+  .bracket.br{bottom:14px; right:14px; border-bottom:2px solid; border-right:2px solid;}
+
+  nav{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 48px;
+    background:rgba(10,26,46,0.85);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--navy-line);
+  }
+  .nav-id{display:flex; align-items:center; gap:10px;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--green-ok); box-shadow:0 0 8px var(--green-ok); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+  .nav-id span{font-size:13px; letter-spacing:.12em; color:var(--slate);}
+  .nav-links{display:flex; gap:22px; align-items:center;}
+  .nav-links a{color:var(--paper); text-decoration:none; font-size:13px; letter-spacing:.08em; opacity:.8; transition:opacity .2s, color .2s;}
+  .nav-links a:hover, .nav-links a:focus-visible{opacity:1; color:var(--cyan);}
+  #resetBtn{
+    background:transparent; border:1px solid var(--navy-line); color:var(--slate);
+    font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.06em;
+    padding:7px 12px; border-radius:100px; cursor:pointer; transition:.2s;
+  }
+  #resetBtn:hover{border-color:var(--amber); color:var(--amber);}
+  #exportBtn{
+    background:rgba(95,216,232,0.1); border:1px solid var(--cyan-dim); color:var(--cyan);
+    font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.06em;
+    padding:7px 14px; border-radius:100px; cursor:pointer; transition:.2s;
+  }
+  #exportBtn:hover{background:rgba(95,216,232,0.22); border-color:var(--cyan);}
+
+  section{padding:100px 48px; max-width:1180px; margin:0 auto; position:relative;}
+
+  .hero{padding-top:90px; padding-bottom:70px;}
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:.18em; color:var(--cyan);
+    border:1px solid var(--cyan-dim); padding:6px 14px; border-radius:100px;
+    margin-bottom:28px;
+  }
+  .hero-eyebrow::before{content:'●'; font-size:8px; color:var(--green-ok);}
+  h1.hero-title{
+    font-size:clamp(2.6rem, 6vw, 5rem);
+    line-height:1.02;
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  h1.hero-title .accent{color:var(--cyan);}
+  .hero-sub{margin-top:26px; max-width:560px; color:var(--slate); font-size:17px; line-height:1.6;}
+  .hero-meta{
+    margin-top:48px; display:grid; grid-template-columns:repeat(3,auto); gap:0; max-width:600px;
+    border:1px solid var(--navy-line); border-radius:10px; overflow:hidden;
+  }
+  .hero-meta div{padding:16px 22px; border-right:1px solid var(--navy-line);}
+  .hero-meta div:last-child{border-right:none;}
+  .hero-meta .label{font-size:11px; letter-spacing:.1em; color:var(--slate); text-transform:uppercase; margin-bottom:6px;}
+  .hero-meta .val{font-size:15px; font-weight:700;}
+
+  .sec-label{display:flex; align-items:baseline; gap:16px; margin-bottom:20px;}
+  .sec-label .tag{font-size:12px; color:var(--cyan); letter-spacing:.16em; white-space:nowrap;}
+  .sec-label .line{height:1px; background:var(--navy-line); flex:1;}
+  .sec-label h2{font-size:clamp(1.6rem,3vw,2.3rem); font-weight:800;}
+
+  .edit-note{
+    display:flex; gap:10px; align-items:flex-start; color:var(--slate); font-size:13.5px;
+    margin-bottom:44px; max-width:680px; line-height:1.6; padding:12px 16px;
+    border:1px dashed var(--navy-line); border-radius:10px; background:rgba(95,216,232,0.03);
+  }
+  .edit-note strong{color:var(--cyan);}
+
+  .org-wrap{position:relative;}
+  svg.connectors{position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;}
+  .org-grid{position:relative; z-index:1;}
+
+  .photo-slot{
+    width:84px; height:84px; border-radius:50%; margin:0 auto 14px;
+    border:1.5px dashed var(--navy-line);
+    display:flex; align-items:center; justify-content:center;
+    background:repeating-linear-gradient(135deg, rgba(95,216,232,0.04) 0 8px, transparent 8px 16px);
+    color:var(--slate); overflow:hidden; flex-shrink:0; cursor:pointer;
+    transition:border-color .2s, color .2s, transform .2s;
+    position:relative;
+  }
+  .photo-slot img.default-photo, .day-photo img.default-photo{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .photo-slot svg{width:26px; height:26px; opacity:.7;}
+  .photo-slot:hover{border-color:var(--cyan); color:var(--cyan); transform:scale(1.04);}
+  .photo-slot::after{
+    content:'Ganti Foto'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(10,26,46,0.75); color:var(--cyan); font-size:9.5px; font-family:'Space Mono',monospace;
+    letter-spacing:.04em; text-align:center; opacity:0; transition:opacity .2s; padding:4px;
+  }
+  .photo-slot:hover::after{opacity:1;}
+
+  [contenteditable="true"]{
+    outline:none; border-radius:6px; transition:background .15s, box-shadow .15s; cursor:text;
+    padding:1px 4px; margin:-1px -4px;
+  }
+  [contenteditable="true"]:hover{background:rgba(95,216,232,0.06);}
+  [contenteditable="true"]:focus{background:rgba(95,216,232,0.1); box-shadow:0 0 0 1.5px var(--cyan-dim);}
+
+  .node{
+    background:var(--navy-panel);
+    border:1px solid var(--navy-line);
+    border-radius:12px;
+    padding:24px 20px;
+    position:relative;
+    text-align:center;
+    transition:border-color .25s, transform .25s, box-shadow .25s;
+  }
+  .node:hover{border-color:var(--cyan); transform:translateY(-3px); box-shadow:0 12px 30px -12px rgba(95,216,232,0.25);}
+  .node .role{font-size:11px; letter-spacing:.14em; color:var(--cyan); margin-bottom:6px; text-transform:uppercase;}
+  .node .name{font-size:17px; font-weight:700; line-height:1.3;}
+  .node .id{font-size:11px; color:var(--slate); margin-top:8px; letter-spacing:.05em;}
+  .node .profile-text{
+    margin-top:12px; font-size:12.5px; color:var(--slate); line-height:1.5;
+    border-top:1px dashed var(--navy-line); padding-top:12px; font-style:italic;
+  }
+
+  .tier-wali{display:flex; justify-content:center; margin-bottom:64px;}
+  .tier-wali .node{max-width:340px; border-color:var(--amber); background:linear-gradient(180deg, rgba(242,169,59,0.08), var(--navy-panel));}
+  .tier-wali .role{color:var(--amber);}
+  .tier-wali .photo-slot{width:100px; height:100px;}
+
+  .tier-inti{display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:640px; margin:0 auto 64px;}
+
+  .tier-staff{display:grid; grid-template-columns:repeat(2,1fr); gap:24px;}
+  .staff-group{background:var(--navy-panel); border:1px solid var(--navy-line); border-radius:12px; padding:22px 20px;}
+  .staff-group > .role{font-size:11px; letter-spacing:.14em; color:var(--cyan); text-transform:uppercase; margin-bottom:16px; text-align:center;}
+  .person-card{padding:16px 0; border-top:1px dashed var(--navy-line);}
+  .person-card:first-of-type{border-top:none; padding-top:0;}
+  .person-card .photo-slot{width:64px; height:64px; margin-bottom:10px;}
+  .person-card .name{font-size:15px; font-weight:700; text-align:center;}
+  .person-card .profile-text{
+    margin-top:8px; font-size:12px; color:var(--slate); line-height:1.5;
+    text-align:center; font-style:italic;
+  }
+
+  /* PIKET */
+  .piket-scroll{overflow-x:auto; padding-bottom:8px;}
+  .piket-grid{display:grid; grid-template-columns:repeat(5,minmax(190px,1fr)); gap:16px; min-width:960px;}
+  .day-card{background:var(--navy-panel); border:1px solid var(--navy-line); border-radius:12px; overflow:hidden;}
+  .day-head{padding:14px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--navy-line);}
+  .day-head .day-name{font-weight:800; font-size:14px; letter-spacing:.04em;}
+  .day-head .count{
+    font-size:11px; color:var(--navy-deep); background:var(--cyan);
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .day-photo{
+    aspect-ratio:4/3; margin:14px 16px 0; border-radius:8px;
+    border:1.5px dashed var(--navy-line); cursor:pointer; overflow:hidden; position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:repeating-linear-gradient(135deg, rgba(95,216,232,0.04) 0 8px, transparent 8px 16px);
+    color:var(--slate); transition:border-color .2s, color .2s;
+  }
+  .day-photo img{width:100%; height:100%; object-fit:cover; position:absolute; inset:0;}
+  .day-photo svg{width:20px; height:20px; opacity:.7;}
+  .day-photo span{font-size:9.5px; font-family:'Space Mono',monospace; letter-spacing:.04em; position:relative; z-index:1;}
+  .day-photo:hover{border-color:var(--cyan); color:var(--cyan);}
+  .day-list{list-style:none; padding:14px 16px 18px;}
+  .day-list li{
+    font-size:13.5px; padding:8px 0 8px 18px; position:relative; color:var(--paper);
+    border-bottom:1px dashed var(--navy-line); line-height:1.4;
+  }
+  .day-list li:last-child{border-bottom:none;}
+  .day-list li::before{content:'›'; position:absolute; left:0; top:7px; color:var(--cyan); font-weight:700;}
+
+  /* GALLERY */
+  .gallery-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .g-photo-item, .g-add-card{
+    aspect-ratio:4/3; border-radius:12px; position:relative; overflow:hidden;
+  }
+  .g-photo-item{border:1px solid var(--navy-line);}
+  .g-photo-item img, .g-photo-item video{width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+  .g-remove{
+    position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%;
+    background:rgba(10,26,46,0.85); color:var(--paper); border:1px solid var(--navy-line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; line-height:1;
+    opacity:0; transition:opacity .2s, border-color .2s, color .2s;
+  }
+  .g-photo-item:hover .g-remove{opacity:1;}
+  .g-remove:hover{border-color:var(--amber); color:var(--amber);}
+  .g-add-card{
+    border:1.5px dashed var(--navy-line); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    background:repeating-linear-gradient(135deg, rgba(95,216,232,0.03) 0 10px, transparent 10px 20px);
+    color:var(--slate); transition:border-color .2s, color .2s, transform .2s;
+  }
+  .g-add-card:hover{border-color:var(--cyan); color:var(--cyan); transform:scale(1.02);}
+  .g-add-card .plus{font-size:34px; font-weight:300; line-height:1;}
+  .g-add-card .g-label{font-size:11px; letter-spacing:.08em; text-transform:uppercase;}
+
+  footer{padding:44px 48px; text-align:center; border-top:1px solid var(--navy-line); color:var(--slate); font-size:12.5px; letter-spacing:.04em;}
+  footer span{color:var(--cyan);}
+
+  @media (max-width:760px){
+    section{padding:70px 22px;}
+    nav{padding:14px 20px;}
+    .nav-links{gap:12px;}
+    .tier-inti, .tier-staff, .gallery-grid{grid-template-columns:1fr;}
+    .hero-meta{grid-template-columns:1fr;}
+    .hero-meta div{border-right:none; border-bottom:1px solid var(--navy-line);}
+    .hero-meta div:last-child{border-bottom:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .dot{animation:none;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bracket tl"></div>
+<div class="bracket tr"></div>
+<div class="bracket bl"></div>
+<div class="bracket br"></div>
+
+<nav>
+  <div class="nav-id mono">
+    <span class="dot"></span>
+    <span>XI-TKJ-1 // NETWORK-CLASS</span>
+  </div>
+  <div class="nav-links mono">
+    <a href="#struktur">STRUKTUR</a>
+    <a href="#piket">PIKET</a>
+    <a href="#galeri">GALERI</a>
+    <button id="exportBtn" type="button">⬇ Simpan HTML</button>
+    <button id="resetBtn" type="button">Reset Semua</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow mono">STATUS: ONLINE — TAHUN AJARAN 2025/2026</div>
+  <h1 class="hero-title">Kelas <span class="accent">XI TKJ 1</span><br>Teknik Komputer &amp; Jaringan</h1>
+  <p class="hero-sub">Topologi organisasi, jadwal piket mingguan, dan dokumentasi kegiatan kelas XI TKJ 1 — dirancang seperti diagram jaringan, karena kami memang anak jaringan.</p>
+  <div class="hero-meta mono">
+    <div><div class="label">Wali Kelas</div><div class="val" id="heroWaliName">Yaniko Dimas Yogo Prasetyo</div></div>
+    <div><div class="label">Total Node Piket</div><div class="val">34 Siswa</div></div>
+    <div><div class="label">Siklus</div><div class="val">Senin – Jumat</div></div>
+  </div>
+  <div class="edit-note" style="margin-top:28px; margin-bottom:0; max-width:640px;">
+    <span>💾</span>
+    <div>Sudah selesai edit foto dan teks? Klik <strong>"⬇ Simpan HTML"</strong> di pojok kanan atas untuk mengunduh file HTML final — semua foto dan teks yang kamu ubah akan otomatis tertanam di dalamnya, siap diunggah ke GitHub atau hosting lain.</div>
+  </div>
+</section>
+
+<section id="struktur">
+  <div class="sec-label">
+    <span class="tag mono">01 / TOPOLOGI</span>
+    <div class="line"></div>
+    <h2>Struktur Organisasi</h2>
+  </div>
+  <div class="edit-note">
+    <span>🗂️</span>
+    <div><strong>Cara pasang foto:</strong> taruh file foto di folder yang sama dengan file HTML ini, beri nama <strong>persis</strong> seperti berikut — <code class="mono">wali.jpg</code>, <code class="mono">ketua.jpg</code>, <code class="mono">wakil.jpg</code>, <code class="mono">sekre1.jpg</code>, <code class="mono">sekre2.jpg</code>, <code class="mono">bendahara1.jpg</code>, <code class="mono">bendahara2.jpg</code>. Foto akan otomatis muncul begitu halaman dibuka, tanpa perlu klik apapun. Kalau nama file berbeda (misalnya .png), klik kotak fotonya untuk unggah manual seperti biasa.</div>
+  </div>
+
+  <div class="org-wrap">
+    <svg class="connectors" id="connSvg"></svg>
+    <div class="org-grid">
+      <div class="tier-wali">
+        <div class="node" data-node="wali">
+          <div class="photo-slot" data-id="wali">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <img class="default-photo" src="wali.jpg" alt="Foto Wali Kelas" onerror="this.remove()">
+          </div>
+          <div class="role">Gateway — Wali Kelas</div>
+          <div class="name" contenteditable="true" data-id="wali-name">Yaniko Dimas Yogo Prasetyo</div>
+          <div class="id mono">NODE::00 — SUPERVISOR</div>
+          <div class="profile-text" contenteditable="true" data-id="wali-profile">Membimbing dan mengawasi seluruh kegiatan akademik maupun non-akademik kelas XI TKJ 1.</div>
+        </div>
+      </div>
+
+      <div class="tier-inti">
+        <div class="node" data-node="ketua">
+          <div class="photo-slot" data-id="ketua">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <img class="default-photo" src="ketua.jpg" alt="Foto Ketua Kelas" onerror="this.remove()">
+          </div>
+          <div class="role">Router Utama — Ketua Kelas</div>
+          <div class="name" contenteditable="true" data-id="ketua-name">Jhon Terry Eka Ramadhani</div>
+          <div class="id mono">NODE::01</div>
+          <div class="profile-text" contenteditable="true" data-id="ketua-profile">Memimpin jalannya kegiatan kelas dan menjadi penghubung utama antara siswa dan wali kelas.</div>
+        </div>
+        <div class="node" data-node="wakil">
+          <div class="photo-slot" data-id="wakil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <img class="default-photo" src="wakil.jpg" alt="Foto Wakil Ketua" onerror="this.remove()">
+          </div>
+          <div class="role">Router Cadangan — Wakil Ketua</div>
+          <div class="name" contenteditable="true" data-id="wakil-name">Calya Aqila Al Mouzavie</div>
+          <div class="id mono">NODE::02</div>
+          <div class="profile-text" contenteditable="true" data-id="wakil-profile">Mendampingi ketua kelas dan mengambil alih koordinasi saat ketua berhalangan hadir.</div>
+        </div>
+      </div>
+
+      <div class="tier-staff">
+        <div class="staff-group" data-node="sekre">
+          <div class="role">Sekretaris</div>
+          <div class="person-card">
+            <div class="photo-slot" data-id="sekre1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              <img class="default-photo" src="sekre1.jpg" alt="Foto Sekretaris 1" onerror="this.remove()">
+            </div>
+            <div class="name" contenteditable="true" data-id="sekre1-name">Naura Yuwan Ramandhita</div>
+            <div class="profile-text" contenteditable="true" data-id="sekre1-profile">Mencatat notulen kegiatan dan mengelola administrasi surat-menyurat kelas.</div>
+          </div>
+          <div class="person-card">
+            <div class="photo-slot" data-id="sekre2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              <img class="default-photo" src="sekre2.jpg" alt="Foto Sekretaris 2" onerror="this.remove()">
+            </div>
+            <div class="name" contenteditable="true" data-id="sekre2-name">Amelia Fransiska Dyah C</div>
+            <div class="profile-text" contenteditable="true" data-id="sekre2-profile">Membantu pengarsipan dokumen dan menyusun jadwal kegiatan kelas.</div>
+          </div>
+        </div>
+        <div class="staff-group" data-node="bendahara">
+          <div class="role">Bendahara</div>
+          <div class="person-card">
+            <div class="photo-slot" data-id="bendahara1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              <img class="default-photo" src="bendahara1.jpg" alt="Foto Bendahara 1" onerror="this.remove()">
+            </div>
+            <div class="name" contenteditable="true" data-id="bendahara1-name">Ajeng Ayu Siswati</div>
+            <div class="profile-text" contenteditable="true" data-id="bendahara1-profile">Mengelola kas kelas serta mencatat pemasukan dan pengeluaran keuangan.</div>
+          </div>
+          <div class="person-card">
+            <div class="photo-slot" data-id="bendahara2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              <img class="default-photo" src="bendahara2.jpg" alt="Foto Bendahara 2" onerror="this.remove()">
+            </div>
+            <div class="name" contenteditable="true" data-id="bendahara2-name">Fari Itha AS. Sabrin</div>
+            <div class="profile-text" contenteditable="true" data-id="bendahara2-profile">Membantu pengelolaan dana kelas dan pelaporan keuangan secara berkala.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="piket">
+  <div class="sec-label">
+    <span class="tag mono">02 / SCHEDULE</span>
+    <div class="line"></div>
+    <h2>Jadwal Piket Mingguan</h2>
+  </div>
+  <div class="edit-note">
+    <span>🗂️</span>
+    <div><strong>Cara pasang foto piket:</strong> beri nama file persis <code class="mono">piket-senin.jpg</code>, <code class="mono">piket-selasa.jpg</code>, <code class="mono">piket-rabu.jpg</code>, <code class="mono">piket-kamis.jpg</code>, <code class="mono">piket-jumat.jpg</code>, taruh di folder yang sama dengan HTML ini. Atau klik kotaknya langsung untuk unggah manual.</div>
+  </div>
+
+  <div class="piket-scroll">
+    <div class="piket-grid mono">
+      <div class="day-card">
+        <div class="day-head"><span class="day-name">SENIN</span><span class="count">7</span></div>
+        <div class="day-photo" data-id="piket-senin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>FOTO PIKET</span>
+          <img class="default-photo" src="piket-senin.jpg" alt="Foto Piket Senin" onerror="this.remove()">
+        </div>
+        <ul class="day-list" style="font-family:'Inter',sans-serif;">
+          <li contenteditable="true">Muhammad Ridhlo Maulana Akbar</li>
+          <li contenteditable="true">M. Devan Abdika Bangsa</li>
+          <li contenteditable="true">Fabrianz Torino Putranzah</li>
+          <li contenteditable="true">Ahmad Zidan Alfadly</li>
+          <li contenteditable="true">Ascha Bryan Firdaus</li>
+          <li contenteditable="true">Ahmad Khubaisy Muhsinin</li>
+          <li contenteditable="true">Juan Dzakwan Hisyam</li>
+        </ul>
+      </div>
+      <div class="day-card">
+        <div class="day-head"><span class="day-name">SELASA</span><span class="count">7</span></div>
+        <div class="day-photo" data-id="piket-selasa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>FOTO PIKET</span>
+          <img class="default-photo" src="piket-selasa.jpg" alt="Foto Piket Selasa" onerror="this.remove()">
+        </div>
+        <ul class="day-list" style="font-family:'Inter',sans-serif;">
+          <li contenteditable="true">Silva Talitha Dzakira</li>
+          <li contenteditable="true">Fizza Fahrian Dwidama</li>
+          <li contenteditable="true">Muhammad Farid Byantara Kusuma</li>
+          <li contenteditable="true">Khahlil Azzam Mudji Maulinda</li>
+          <li contenteditable="true">Nico Putra Pramana</li>
+          <li contenteditable="true">Muhammad Akbar Brilian</li>
+          <li contenteditable="true">Ahmad Sony Fahreza</li>
+        </ul>
+      </div>
+      <div class="day-card">
+        <div class="day-head"><span class="day-name">RABU</span><span class="count">7</span></div>
+        <div class="day-photo" data-id="piket-rabu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>FOTO PIKET</span>
+          <img class="default-photo" src="piket-rabu.jpg" alt="Foto Piket Rabu" onerror="this.remove()">
+        </div>
+        <ul class="day-list" style="font-family:'Inter',sans-serif;">
+          <li contenteditable="true">Naura Yuwan Ramandhita</li>
+          <li contenteditable="true">Nadine Anindya Alfian Putri</li>
+          <li contenteditable="true">Amelia Fransiska Dyah C</li>
+          <li contenteditable="true">Reyghen Ethan Bradly Simanjuntak</li>
+          <li contenteditable="true">Theodorius Adi Fatlolon</li>
+          <li contenteditable="true">Calya Aqila Al Mouzavie</li>
+          <li contenteditable="true">Muhammad Yafiq Nadim Rafif</li>
+        </ul>
+      </div>
+      <div class="day-card">
+        <div class="day-head"><span class="day-name">KAMIS</span><span class="count">7</span></div>
+        <div class="day-photo" data-id="piket-kamis">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>FOTO PIKET</span>
+          <img class="default-photo" src="piket-kamis.jpg" alt="Foto Piket Kamis" onerror="this.remove()">
+        </div>
+        <ul class="day-list" style="font-family:'Inter',sans-serif;">
+          <li contenteditable="true">Ayyub</li>
+          <li contenteditable="true">Ajeng Ayu Siswati</li>
+          <li contenteditable="true">Dhaniel Wahyu Bahtiar</li>
+          <li contenteditable="true">Ken Kanzan Makhfiyan</li>
+          <li contenteditable="true">Baskoro Gadang Widhyodono</li>
+          <li contenteditable="true">Raditya Satrio Abimanyu</li>
+          <li contenteditable="true">Fari Itha AS. Sabrin</li>
+        </ul>
+      </div>
+      <div class="day-card">
+        <div class="day-head"><span class="day-name">JUMAT</span><span class="count">6</span></div>
+        <div class="day-photo" data-id="piket-jumat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>FOTO PIKET</span>
+          <img class="default-photo" src="piket-jumat.jpg" alt="Foto Piket Jumat" onerror="this.remove()">
+        </div>
+        <ul class="day-list" style="font-family:'Inter',sans-serif;">
+          <li contenteditable="true">Zidni Nuro M</li>
+          <li contenteditable="true">Dwi Affandy</li>
+          <li contenteditable="true">Lintang Albrian Anwar</li>
+          <li contenteditable="true">Zanuar Eka Prasetya</li>
+          <li contenteditable="true">Queensha Aurellia</li>
+          <li contenteditable="true">Jhon Terry Eka Ramadhani</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="galeri">
+  <div class="sec-label">
+    <span class="tag mono">03 / LOG</span>
+    <div class="line"></div>
+    <h2>Galeri Kegiatan Kelas</h2>
+  </div>
+  <div class="edit-note">
+    <span>📷</span>
+    <div>Klik kartu <strong>"+ Tambah Foto/Video"</strong> untuk menambah foto atau video kegiatan sebanyak yang kamu mau. Arahkan kursor ke item untuk menampilkan tombol hapus (×). Video sebaiknya berdurasi pendek dan ukurannya kecil, karena tersimpan langsung di browser.</div>
+  </div>
+  <div class="gallery-grid" id="galleryGrid">
+    <div class="g-add-card" id="galleryAddCard">
+      <span class="plus">+</span>
+      <span class="g-label mono">Tambah Foto/Video</span>
+    </div>
+  </div>
+</section>
+
+<footer class="mono">
+  XI TKJ 1 <span>//</span> Dibangun dengan topologi bintang, disatukan lewat piket harian.
+</footer>
+
+<input type="file" id="hiddenFileInput" accept="image/*" style="display:none;">
+<input type="file" id="galleryFileInput" accept="image/*,video/*" style="display:none;">
+
+<script>
+  const STORAGE_KEY = 'xitkj1_site_data_v1';
+  let currentPhotoTarget = null;
+  const fileInput = document.getElementById('hiddenFileInput');
+  const galleryFileInput = document.getElementById('galleryFileInput');
+  const galleryGrid = document.getElementById('galleryGrid');
+  const galleryAddCard = document.getElementById('galleryAddCard');
+
+  // Kompres & konversi gambar ke JPG agar hemat ruang penyimpanan browser dan lebih kompatibel (mis. dari HEIC iPhone)
+  function compressImage(file, maxDim, quality){
+    maxDim = maxDim || 1280;
+    quality = quality || 0.8;
+    return new Promise((resolve, reject)=>{
+      const objUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(objUrl);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = (err)=>{ URL.revokeObjectURL(objUrl); reject(err); };
+      img.src = objUrl;
+    });
+  }
+
+  function loadData(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function saveData(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+  function setPhoto(id, dataUrl){
+    const data = loadData();
+    data.photos = data.photos || {};
+    data.photos[id] = dataUrl;
+    saveData(data);
+  }
+  function setText(id, text){
+    const data = loadData();
+    data.texts = data.texts || {};
+    data.texts[id] = text;
+    saveData(data);
+  }
+
+  // Sesuaikan bentuk kotak foto piket (landscape/potret) mengikuti orientasi foto yang diunggah
+  function applyDayPhotoAspect(slot, dataUrl){
+    if(!slot.classList.contains('day-photo')) return;
+    const img = new Image();
+    img.onload = ()=>{
+      slot.style.aspectRatio = (img.naturalWidth >= img.naturalHeight) ? '4 / 3' : '3 / 4';
+    };
+    img.src = dataUrl;
+  }
+
+  // ---- Fixed photo slots (org chart + piket day photos) ----
+  function applyFixedPhotosAndTexts(){
+    const data = loadData();
+    if(data.photos){
+      Object.keys(data.photos).forEach(id=>{
+        const slot = document.querySelector(`.photo-slot[data-id="${id}"], .day-photo[data-id="${id}"]`);
+        if(slot){
+          slot.innerHTML = `<img src="${data.photos[id]}" alt="Foto">`;
+          applyDayPhotoAspect(slot, data.photos[id]);
+        }
+      });
+    }
+    if(data.texts){
+      Object.keys(data.texts).forEach(id=>{
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if(el && el.hasAttribute('contenteditable')){ el.textContent = data.texts[id]; }
+        if(id === 'wali-name'){ document.getElementById('heroWaliName').textContent = data.texts[id]; }
+      });
+    }
+  }
+
+  document.querySelectorAll('.photo-slot, .day-photo').forEach(slot=>{
+    slot.addEventListener('click', ()=>{
+      currentPhotoTarget = slot;
+      fileInput.click();
+    });
+  });
+
+  fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file || !currentPhotoTarget) return;
+    compressImage(file).then(dataUrl=>{
+      currentPhotoTarget.innerHTML = `<img src="${dataUrl}" alt="Foto">`;
+      applyDayPhotoAspect(currentPhotoTarget, dataUrl);
+      const id = currentPhotoTarget.getAttribute('data-id');
+      if(id){
+        try{ setPhoto(id, dataUrl); }
+        catch(err){ alert('Gagal menyimpan foto: penyimpanan browser sudah penuh. Coba hapus beberapa foto/video di galeri dulu.'); }
+      }
+    }).catch(()=>{
+      alert('Foto ini gagal dibaca (kemungkinan formatnya tidak didukung browser, misalnya HEIC dari iPhone). Coba ubah dulu ke JPG/PNG, atau screenshot fotonya lalu unggah ulang.');
+    });
+    fileInput.value = '';
+  });
+
+  document.querySelectorAll('[contenteditable="true"]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const id = el.getAttribute('data-id');
+      const text = el.textContent;
+      if(id){
+        setText(id, text);
+        if(id === 'wali-name'){ document.getElementById('heroWaliName').textContent = text; }
+      }
+    });
+  });
+
+  // ---- Dynamic gallery (unlimited photos with + button) ----
+  function getGalleryPhotos(){
+    const data = loadData();
+    return data.gallery || [];
+  }
+  function saveGalleryPhotos(arr){
+    const data = loadData();
+    data.gallery = arr;
+    saveData(data);
+  }
+  function renderGallery(){
+    const photos = getGalleryPhotos();
+    galleryGrid.querySelectorAll('.g-photo-item').forEach(el=>el.remove());
+    photos.forEach((dataUrl, idx)=>{
+      const item = document.createElement('div');
+      item.className = 'g-photo-item';
+      const isVideo = dataUrl.startsWith('data:video');
+      const mediaHtml = isVideo
+        ? `<video src="${dataUrl}" controls muted playsinline></video>`
+        : `<img src="${dataUrl}" alt="Foto kegiatan">`;
+      item.innerHTML = `${mediaHtml}<button class="g-remove" type="button" title="Hapus">×</button>`;
+      item.querySelector('.g-remove').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const arr = getGalleryPhotos();
+        arr.splice(idx,1);
+        saveGalleryPhotos(arr);
+        renderGallery();
+      });
+      galleryGrid.insertBefore(item, galleryAddCard);
+    });
+  }
+
+  galleryAddCard.addEventListener('click', ()=>{ galleryFileInput.click(); });
+  galleryFileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    function pushAndSave(dataUrl){
+      const arr = getGalleryPhotos();
+      arr.push(dataUrl);
+      try{
+        saveGalleryPhotos(arr);
+        renderGallery();
+      }catch(err){
+        alert('Gagal menyimpan: penyimpanan browser sudah penuh. Coba hapus beberapa foto/video lama dulu, atau gunakan video yang lebih pendek/kecil.');
+      }
+    }
+
+    if(file.type.startsWith('image/')){
+      compressImage(file).then(pushAndSave).catch(()=>{
+        alert('Foto ini gagal dibaca (kemungkinan formatnya tidak didukung browser, misalnya HEIC dari iPhone). Coba ubah dulu ke JPG/PNG, atau screenshot fotonya lalu unggah ulang.');
+      });
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev)=> pushAndSave(ev.target.result);
+      reader.onerror = ()=> alert('Video ini gagal dibaca. Coba gunakan file dengan format/ukuran berbeda.');
+      reader.readAsDataURL(file);
+    }
+    galleryFileInput.value = '';
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    // Ambil salinan halaman saat ini, buang tombol reset/export & garis bantu edit dari hasil export
+    const clone = document.documentElement.cloneNode(true);
+    clone.querySelectorAll('.edit-note, #resetBtn, #exportBtn, #hiddenFileInput, #galleryFileInput').forEach(el=>el.remove());
+    clone.querySelectorAll('.photo-slot::after').forEach(()=>{}); // no-op, pseudo-elements ignored safely
+
+    const htmlString = '<!DOCTYPE html>\n' + clone.outerHTML;
+    const blob = new Blob([htmlString], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'struktur_kelas.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    if(confirm('Yakin ingin menghapus semua foto dan teks yang sudah diedit, dan kembali ke tampilan awal?')){
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+  });
+
+  function drawConnectors(){
+    const svg = document.getElementById('connSvg');
+    const wrap = document.querySelector('.org-wrap');
+    const rect = wrap.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+    svg.innerHTML = '';
+
+    const wali = document.querySelector('[data-node="wali"]');
+    const ketua = document.querySelector('[data-node="ketua"]');
+    const wakil = document.querySelector('[data-node="wakil"]');
+    const sekre = document.querySelector('[data-node="sekre"]');
+    const bendahara = document.querySelector('[data-node="bendahara"]');
+
+    function center(el, edge){
+      const r = el.getBoundingClientRect();
+      const x = r.left - rect.left + r.width/2;
+      const yTop = r.top - rect.top;
+      const yBottom = r.bottom - rect.top;
+      return edge === 'top' ? {x, y:yTop} : {x, y:yBottom};
+    }
+    function path(p1, p2){
+      const midY = (p1.y + p2.y) / 2;
+      const d = `M ${p1.x} ${p1.y} C ${p1.x} ${midY}, ${p2.x} ${midY}, ${p2.x} ${p2.y}`;
+      const line = document.createElementNS('http://www.w3.org/2000/svg','path');
+      line.setAttribute('d', d);
+      line.setAttribute('stroke', 'rgba(95,216,232,0.45)');
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('fill', 'none');
+      line.setAttribute('stroke-dasharray', '4 4');
+      svg.appendChild(line);
+    }
+
+    const waliBottom = center(wali, 'bottom');
+    path(waliBottom, center(ketua, 'top'));
+    path(waliBottom, center(wakil, 'top'));
+
+    const ketuaBottom = center(ketua, 'bottom');
+    const wakilBottom = center(wakil, 'bottom');
+    const midX = (ketuaBottom.x + wakilBottom.x) / 2;
+    path({x:midX, y:ketuaBottom.y}, center(sekre, 'top'));
+    path({x:midX, y:wakilBottom.y}, center(bendahara, 'top'));
+  }
+
+  window.addEventListener('load', ()=>{
+    applyFixedPhotosAndTexts();
+    renderGallery();
+    drawConnectors();
+  });
+  window.addEventListener('resize', drawConnectors);
+</script>
+
+</body>
+</html>
